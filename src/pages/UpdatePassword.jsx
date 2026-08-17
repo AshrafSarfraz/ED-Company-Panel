@@ -44,7 +44,7 @@ export default function UpdatePassword() {
       <div className="bg-gradient-to-br from-[#FFF8EF] via-[#FFF8EF] to-white border border-brand-border rounded-[20px] p-5 md:p-6 shadow-[0_4px_20px_rgba(241,90,33,0.06)] mb-5">
         <div className="flex items-center gap-4">
           {company?.companyLogo
-            ? <img src={company.companyLogo} alt="" className="w-16 h-16 rounded-[12px] object-cover shrink-0" />
+            ? <img src={company.companyLogo} alt="" className="w-16 h-16 rounded-[12px] object-contain border shrink-0" />
             : <div className="w-16 h-16 rounded-[12px] bg-brand-primary text-white flex items-center justify-center text-[24px] font-bold shrink-0 shadow-[0_3px_8px_rgba(241,90,33,0.25)]">
                 {company?.brandName?.charAt(0)}
               </div>
