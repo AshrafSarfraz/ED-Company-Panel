@@ -1,8 +1,23 @@
-
 import { useState, useEffect } from "react";
 import API from "../api/axios";
 import toast, { Toaster } from "react-hot-toast";
 import Loader from "../components/Loader";
+
+const statusCls = {
+  approved:  "bg-green-50 text-green-700 border-green-200",
+  submitted: "bg-blue-50 text-blue-700 border-blue-200",
+  rejected:  "bg-red-50 text-red-600 border-red-200",
+  expired:   "bg-red-50 text-red-600 border-red-200",
+  pending:   "bg-gray-50 text-gray-500 border-gray-200",
+};
+
+const DocStatus = ({ status = "pending" }) => (
+  <span className={`mt-2 inline-block px-3 py-[3px] rounded-[20px] text-[11px] font-semibold border ${statusCls[status] || statusCls.pending}`}>
+    {status}
+  </span>
+);
+
+const fmtDate = (d) => (d ? new Date(d).toLocaleDateString() : null);
 
 export default function Profile() {
   const [company, setCompany] = useState(null);
@@ -33,6 +48,10 @@ export default function Profile() {
 
   if (loading) return <Loader />;
 
+  const cardCls     = "bg-brand-white border border-brand-border rounded-[12px] p-4";
+  const cardTitle   = "text-[11px] text-brand-muted m-0 mb-3 font-semibold uppercase tracking-wide";
+  const viewLinkCls = "block px-3 py-2 bg-blue-50 text-blue-700 rounded-[8px] text-[12px] text-center no-underline mb-2 font-semibold";
+
   return (
     <div className="max-w-[1500px]">
       <Toaster />
@@ -41,7 +60,7 @@ export default function Profile() {
       <div className="bg-gradient-to-br from-[#FFF8EF] via-[#FFF8EF] to-white border border-brand-border rounded-[20px] p-5 md:p-6 shadow-[0_4px_20px_rgba(241,90,33,0.06)] mb-5">
         <div className="flex items-center gap-4 mb-5">
           {company?.companyLogo
-            ? <img src={company.companyLogo} alt="" className="w-16 h-16 rounded-[12px] object-cover shrink-0" />
+            ? <img src={company.companyLogo} alt="" className="w-16 h-16 rounded-[12px] object-contain border shrink-0" />
             : <div className="w-16 h-16 rounded-[12px] bg-brand-primary text-white flex items-center justify-center text-[24px] font-bold shrink-0 shadow-[0_3px_8px_rgba(241,90,33,0.25)]">
                 {company?.brandName?.charAt(0)}
               </div>
@@ -64,7 +83,8 @@ export default function Profile() {
             ["Contact Person", `${company?.firstName} ${company?.lastName}`],
             ["Role",           company?.roleInBusiness],
             ["Trade License",  company?.tradeLicenseNumber],
-            ["Joined",         new Date(company?.createdAt).toLocaleDateString()],
+            ["CR Number",      company?.crNumber || "—"],
+            ["Joined",         fmtDate(company?.createdAt)],
           ].map(([label, val]) => (
             <div key={label}>
               <p className="text-[11px] text-brand-muted m-0 mb-[3px]">{label}</p>
@@ -77,66 +97,76 @@ export default function Profile() {
       {/* Documents */}
       <div className="bg-gradient-to-br from-[#FFF8EF] via-[#FFF8EF] to-white border border-brand-border rounded-[20px] p-5 md:p-6 shadow-[0_4px_20px_rgba(241,90,33,0.06)] mb-5">
         <h3 className="text-[15px] font-bold text-brand-dark m-0 mb-5">Documents</h3>
-        <div className="flex gap-4 flex-wrap">
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
 
           {/* Company Logo */}
-          <div className="flex-1 min-w-[180px] bg-brand-white border border-brand-border rounded-[12px] p-4">
-            <p className="text-[11px] text-brand-muted m-0 mb-3 font-semibold uppercase tracking-wide">Company Logo</p>
+          <div className={cardCls}>
+            <p className={cardTitle}>Company Logo</p>
             {company?.companyLogo
-              ? <img src={company.companyLogo} alt="logo" className="w-[60px] h-[60px] rounded-[8px] object-cover" />
+              ? <img src={company.companyLogo} alt="logo" className="w-[60px] h-[60px] rounded-[8px] object-contain border" />
               : <p className="text-[12px] text-brand-muted m-0">Not uploaded</p>
             }
           </div>
 
           {/* Trade License */}
-          <div className="flex-1 min-w-[180px] bg-brand-white border border-brand-border rounded-[12px] p-4">
-            <p className="text-[11px] text-brand-muted m-0 mb-3 font-semibold uppercase tracking-wide">Trade License</p>
+          <div className={cardCls}>
+            <p className={cardTitle}>Trade License</p>
             {company?.tradeLicenseImage
-              ? <a href={company.tradeLicenseImage} target="_blank" rel="noreferrer"
-                  className="block px-3 py-2 bg-blue-50 text-blue-700 rounded-[8px] text-[12px] text-center no-underline mb-2 font-semibold">
+              ? <a href={company.tradeLicenseImage} target="_blank" rel="noreferrer" className={viewLinkCls}>
                   View Document →
                 </a>
               : <p className="text-[12px] text-brand-muted mb-2 m-0">Not uploaded</p>
             }
-            {company?.tradeLicenseExpiry && (
-              <p className="text-[11px] text-brand-muted mt-2 m-0">
-                Expiry: {new Date(company.tradeLicenseExpiry).toLocaleDateString()}
-              </p>
+            {company?.tradeLicenseNumber && (
+              <p className="text-[11px] text-brand-muted mt-2 m-0">No: {company.tradeLicenseNumber}</p>
             )}
-            <span className={`mt-2 inline-block px-3 py-[3px] rounded-[20px] text-[11px] font-semibold border
-              ${company?.tradeLicenseStatus === "approved"  ? "bg-green-50 text-green-700 border-green-200"
-              : company?.tradeLicenseStatus === "submitted" ? "bg-blue-50 text-blue-700 border-blue-200"
-              : company?.tradeLicenseStatus === "rejected"  ? "bg-red-50 text-red-600 border-red-200"
-              : "bg-gray-50 text-gray-500 border-gray-200"}`}>
-              {company?.tradeLicenseStatus || "pending"}
-            </span>
+            {company?.tradeLicenseExpiry && (
+              <p className="text-[11px] text-brand-muted mt-2 m-0">Expiry: {fmtDate(company.tradeLicenseExpiry)}</p>
+            )}
+            <DocStatus status={company?.tradeLicenseStatus} />
           </div>
 
           {/* QID */}
-          <div className="flex-1 min-w-[180px] bg-brand-white border border-brand-border rounded-[12px] p-4">
-            <p className="text-[11px] text-brand-muted m-0 mb-3 font-semibold uppercase tracking-wide">QID (Contact Person)</p>
+          <div className={cardCls}>
+            <p className={cardTitle}>QID (Contact Person)</p>
             {company?.qidImage
-              ? <a href={company.qidImage} target="_blank" rel="noreferrer"
-                  className="block px-3 py-2 bg-blue-50 text-blue-700 rounded-[8px] text-[12px] text-center no-underline mb-2 font-semibold">
+              ? <a href={company.qidImage} target="_blank" rel="noreferrer" className={viewLinkCls}>
                   View Document →
                 </a>
               : <p className="text-[12px] text-brand-muted mb-2 m-0">Not uploaded</p>
             }
             {company?.qidExpiry && (
-              <p className="text-[11px] text-brand-muted mt-2 m-0">
-                Expiry: {new Date(company.qidExpiry).toLocaleDateString()}
-              </p>
+              <p className="text-[11px] text-brand-muted mt-2 m-0">Expiry: {fmtDate(company.qidExpiry)}</p>
             )}
-            <span className={`mt-2 inline-block px-3 py-[3px] rounded-[20px] text-[11px] font-semibold border
-              ${company?.qidStatus === "approved"  ? "bg-green-50 text-green-700 border-green-200"
-              : company?.qidStatus === "submitted" ? "bg-blue-50 text-blue-700 border-blue-200"
-              : company?.qidStatus === "rejected"  ? "bg-red-50 text-red-600 border-red-200"
-              : "bg-gray-50 text-gray-500 border-gray-200"}`}>
-              {company?.qidStatus || "pending"}
-            </span>
+            <DocStatus status={company?.qidStatus} />
+          </div>
+
+          {/* CR — Commercial Registration */}
+          <div className={cardCls}>
+            <p className={cardTitle}>Commercial Registration</p>
+            {company?.crImage
+              ? <a href={company.crImage} target="_blank" rel="noreferrer" className={viewLinkCls}>
+                  View Document →
+                </a>
+              : <p className="text-[12px] text-brand-muted mb-2 m-0">Not uploaded</p>
+            }
+            {company?.crNumber && (
+              <p className="text-[11px] text-brand-muted mt-2 m-0">CR No: {company.crNumber}</p>
+            )}
+            {company?.crExpiry && (
+              <p className="text-[11px] text-brand-muted mt-2 m-0">Expiry: {fmtDate(company.crExpiry)}</p>
+            )}
+            <DocStatus status={company?.crStatus} />
           </div>
 
         </div>
+
+        {company?.documentsStatus === "rejected" && company?.documentsRejectionReason && (
+          <p className="text-[12px] text-red-600 bg-red-50 border border-red-200 rounded-[8px] px-3 py-2 mt-4 m-0">
+            Reason: {company.documentsRejectionReason}
+          </p>
+        )}
       </div>
 
       {/* Change Password */}
